@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISGI MARRAKECH - Student Feedback Interface</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load EmailJS SDK for direct email sending -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+    <style>
+        /* Digital-Themed Styling */
+        
+        /* 1. Subtle Grid Background for Digital Feel */
+        .digital-grid-bg {
+            background-color: #0d1117; /* Very dark background */
+            /* Subtle grid pattern using a radial and linear gradient mix */
+            background-image: linear-gradient(0deg, transparent 24%, rgba(16, 185, 129, 0.05) 25%, rgba(16, 185, 129, 0.05) 26%, transparent 27%, transparent 74%, rgba(16, 185, 129, 0.05) 75%, rgba(16, 185, 129, 0.05) 76%, transparent 77%), 
+                              linear-gradient(90deg, transparent 24%, rgba(16, 185, 129, 0.05) 25%, rgba(16, 185, 129, 0.05) 26%, transparent 27%, transparent 74%, rgba(16, 185, 129, 0.05) 75%, rgba(16, 185, 129, 0.05) 76%, transparent 77%);
+            background-size: 50px 50px;
+        }
+
+        /* 2. Custom scrollbar styling (Improved for dark theme) */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827; /* Darker track */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #10b981; /* Green color */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #059669; /* Darker green on hover */
+        }
+        
+        /* Set default font to Inter */
+        html {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        /* 3. Neon-style glow on focus/hover */
+        .neon-glow-focus:focus {
+            box-shadow: 0 0 0 2px #0d1117, 0 0 0 4px #10b981; /* Inner dark shadow, outer green ring */
+            border-color: #10b981;
+        }
+        .neon-glow-button:hover {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.8);
+            filter: brightness(1.1);
+        }
+
+        .loader {
+            border: 4px solid #161b22;
+            border-top: 4px solid #10b981;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'isgi-green': '#10b981', /* Emerald 500 - Neon Green */
+                        'isgi-black': '#0d1117', /* Very Dark, almost black for background */
+                        'isgi-dark-card': '#161b22', /* Slightly lighter dark for card background */
+                    },
+                    boxShadow: {
+                        'green-glow': '0 0 20px rgba(16, 185, 129, 0.5), 0 0 5px rgba(16, 185, 129, 0.7) inset',
+                    }
+                }
+            }
+        }
+        
+        // --- EmailJS Credentials ---
+        const SERVICE_ID = 'service_51kdb7j';
+        const TEMPLATE_ID = 'template_q4twvdj';
+        const PUBLIC_KEY = 'AK6n8_pMalK08BNvE';
+        // Note: The recipient email bzrzakaria790@gmail.com should be configured in the EmailJS template.
+
+        /**
+         * Initializes EmailJS and sends the report directly.
+         */
+        function sendReport(event) {
+            event.preventDefault();
+
+            const form = document.getElementById('issueForm');
+            const formStatus = document.getElementById('formStatus');
+            const submitButton = document.getElementById('submitButton');
+            
+            // Validate required fields
+            const issueType = document.getElementById('issueType').value;
+            const issueMessage = document.getElementById('issueMessage').value.trim();
+
+            if (!issueType || !issueMessage) {
+                formStatus.innerHTML = 'Error: Please classify the anomaly and provide details.';
+                formStatus.className = 'text-sm font-mono mb-4 text-red-500';
+                return;
+            }
+
+            // Set button state to loading
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="loader"></span> TRANSMITTING...';
+            submitButton.classList.remove('bg-isgi-green');
+            submitButton.classList.add('bg-gray-600');
+            formStatus.className = 'text-sm font-mono mb-4 text-isgi-green';
+            formStatus.innerHTML = 'Sending report to server...';
+
+
+            // Send email using EmailJS
+            emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, form, {
+                publicKey: PUBLIC_KEY,
+            })
+            .then(() => {
+                // Success
+                formStatus.innerHTML = 'Transmission Complete! The anomaly report has been successfully delivered.';
+                formStatus.className = 'text-sm font-mono mb-4 text-isgi-green';
+                form.reset();
+            }, (error) => {
+                // Error
+                console.error('EmailJS Error:', error);
+                formStatus.innerHTML = `[ERROR ${error.status || 'UNKNOWN'}] Transmission failed. Please try again or check console for details.`;
+                formStatus.className = 'text-sm font-mono mb-4 text-red-500';
+            })
+            .finally(() => {
+                // Reset button state
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'EXECUTE REPORT TRANSMISSION';
+                submitButton.classList.add('bg-isgi-green');
+                submitButton.classList.remove('bg-gray-600');
+            });
+        }
+
+        window.onload = function() {
+            // Initialize EmailJS with the public key
+            emailjs.init(PUBLIC_KEY);
+            document.getElementById('issueForm').addEventListener('submit', sendReport);
+            document.getElementById('formStatus').classList.remove('hidden');
+        };
+    </script>
+</head>
+<body class="digital-grid-bg text-gray-100 min-h-screen">
+
+    <!-- Header & Navigation -->
+    <header class="bg-isgi-dark-card/90 backdrop-blur-sm shadow-xl sticky top-0 z-10 border-b border-isgi-green/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="text-2xl font-mono font-extrabold text-isgi-green tracking-widest uppercase">
+                ISGI::FEEDBACK_UNIT
+            </div>
+            <nav>
+                <a href="#about" class="text-gray-300 hover:text-isgi-green transition duration-300 mx-3 font-medium">System Overview</a>
+                <a href="#feedback" class="bg-isgi-green text-isgi-black px-4 py-2 rounded-lg font-bold hover:bg-opacity-80 transition duration-300 shadow-lg neon-glow-button">Report Anomaly</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Section: About ISGI -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        
+        <section id="about" class="mb-20">
+            <h1 class="text-5xl font-extrabold mb-4 text-isgi-green">
+                ISGI MARRAKECH :: Student Feedback Interface
+            </h1>
+            <p class="text-xl text-gray-400 max-w-4xl mb-12">
+                This is a secure conduit for optimizing the **Digital Infrastructure and Academic Environment** of the Institut Supérieur de Génie Informatique. Your input is critical for system stability and operational excellence.
+            </p>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Card 1: System Objective (Our Mission) -->
+                <div class="bg-isgi-dark-card p-6 rounded-lg shadow-green-glow border border-isgi-green/40">
+                    <div class="text-4xl text-isgi-green mb-3 font-mono">01. OBJECTIVE</div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Operational Excellence</h3>
+                    <p class="text-gray-400 text-sm">Targeting high-quality educational delivery. We process feedback on academic modules, laboratory resources, and network integrity to enhance institutional performance.</p>
+                </div>
+                <!-- Card 2: Data Security (Confidentiality) -->
+                <div class="bg-isgi-dark-card p-6 rounded-lg shadow-green-glow border border-isgi-green/40">
+                    <div class="text-4xl text-isgi-green mb-3 font-mono">02. PRIVACY</div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Data Integrity & Anonymity</h3>
+                    <p class="text-gray-400 text-sm">All reported data streams are encrypted and treated with strict confidentiality. The focus remains on resolving the identified system instability or issue.</p>
+                </div>
+                <!-- Card 3: Scope of Input (Areas for Feedback) -->
+                <div class="bg-isgi-dark-card p-6 rounded-lg shadow-green-glow border border-isgi-green/40">
+                    <div class="text-4xl text-isgi-green mb-3 font-mono">03. SCOPE</div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Infrastructure & Curriculum</h3>
+                    <p class="text-gray-400 text-sm">We monitor input channels for issues concerning physical IT infrastructure, software licensing, administrative protocols, and curriculum relevance within the filière informatique.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feedback Form Section -->
+        <section id="feedback" class="py-16">
+            <h2 class="text-4xl font-extrabold mb-8 text-isgi-green border-b-2 border-isgi-green/60 pb-3">
+                [INPUT TERMINAL] Report Anomaly
+            </h2>
+            <div class="bg-isgi-dark-card/80 p-8 rounded-xl shadow-2xl max-w-2xl mx-auto border border-isgi-green/50">
+                <p class="text-gray-400 mb-6 font-mono text-sm">
+                    Initiate new report sequence. Please classify the anomaly and provide detailed specifications.
+                </p>
+                
+                <form id="issueForm">
+                    <!-- Sender Name - IMPORTANT: Added name attribute for EmailJS -->
+                    <div class="mb-4">
+                        <label for="senderName" class="block text-sm font-medium text-gray-300 mb-1 font-mono">STUDENT_ID (Optional)</label>
+                        <input type="text" id="senderName" name="student_id" 
+                               placeholder="Enter your name or student ID..."
+                               class="w-full p-3 bg-isgi-black border border-gray-700 rounded-md neon-glow-focus text-white transition duration-200 placeholder-gray-500 font-mono">
+                    </div>
+
+                    <!-- Issue Type - IMPORTANT: Added name attribute for EmailJS -->
+                    <div class="mb-4">
+                        <label for="issueType" class="block text-sm font-medium text-gray-300 mb-1 font-mono">ANOMALY_CLASSIFICATION *</label>
+                        <select id="issueType" name="issue_type" required 
+                                class="w-full p-3 bg-isgi-black border border-gray-700 rounded-md neon-glow-focus text-white transition duration-200 appearance-none pr-8 font-mono">
+                            <option value="" disabled selected class="bg-isgi-dark-card">-- Select System Area --</option>
+                            <option value="IT/Hardware Failure (Labs, PCs)" class="bg-isgi-dark-card">IT/Hardware Failure (Labs, PCs)</option>
+                            <option value="Network Connectivity / Wi-Fi" class="bg-isgi-dark-card">Network Connectivity / Wi-Fi</option>
+                            <option value="Curriculum / Module Feedback" class="bg-isgi-dark-card">Curriculum / Module Feedback</option>
+                            <option value="Administrative Protocol Error" class="bg-isgi-dark-card">Administrative Protocol Error</option>
+                            <option value="General Facility Error" class="bg-isgi-dark-card">General Facility Error</option>
+                            <option value="Other System Issue" class="bg-isgi-dark-card">Other System Issue</option>
+                        </select>
+                    </div>
+
+                    <!-- Message - IMPORTANT: Added name attribute for EmailJS -->
+                    <div class="mb-6">
+                        <label for="issueMessage" class="block text-sm font-medium text-gray-300 mb-1 font-mono">SPECIFICATION_DETAILS *</label>
+                        <textarea id="issueMessage" name="issue_details" rows="5" required 
+                                  placeholder="Provide detailed logs or description of the anomaly. Include time, location, and observed symptoms."
+                                  class="w-full p-3 bg-isgi-black border border-gray-700 rounded-md neon-glow-focus text-white transition duration-200 placeholder-gray-500 font-mono"></textarea>
+                    </div>
+
+                    <!-- Hidden field for the recipient email (for template use) -->
+                    <input type="hidden" name="recipient_email" value="bzrzakaria790@gmail.com">
+                    
+                    <!-- Form Status Message -->
+                    <p id="formStatus" class="text-sm font-mono mb-4 text-gray-500">
+                        Awaiting input. Report transmission is currently inactive.
+                    </p>
+
+                    <!-- Submission Button -->
+                    <button type="submit" id="submitButton"
+                            class="w-full py-3 bg-isgi-green text-isgi-black font-extrabold rounded-md transition duration-300 shadow-lg transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-isgi-green/50 neon-glow-button">
+                        EXECUTE REPORT TRANSMISSION
+                    </button>
+                    
+                    <p class="text-xs text-gray-500 mt-4 text-center font-mono">
+                        [PROTOCOL]: DIRECT TRANSMISSION enabled via EmailJS.
+                    </p>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-isgi-dark-card/90 py-6 mt-12 border-t border-isgi-green/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm font-mono">
+            <p>&copy; 2024 ISGI::SYSTEMS. ALL RIGHTS RESERVED. | DATA_CONDUIT_STABLE</p>
+        </div>
+    </footer>
+
+</body>
+</html>
